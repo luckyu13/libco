@@ -236,7 +236,7 @@ void inline PopHead( TLink*apLink )
 }
 
 template <class TNode,class TLink>
-void inline Join( TLink*apLink,TLink *apOther )
+void inline Join( TLink*apLink,TLink *apOther )  // 合并两个链表，将apOther合并到apLink上
 {
 	//printf("apOther %p\n",apOther);
 	if( !apOther->head )
@@ -246,10 +246,10 @@ void inline Join( TLink*apLink,TLink *apOther )
 	TNode *lp = apOther->head;
 	while( lp )
 	{
-		lp->pLink = apLink;
+		lp->pLink = apLink;  // 将pLink指针指向 apLink
 		lp = lp->pNext;
 	}
-	lp = apOther->head;
+	lp = apOther->head;  // 连接链表
 	if(apLink->tail)
 	{
 		apLink->tail->pNext = (TNode*)lp;
@@ -382,23 +382,23 @@ int AddTimeout( stTimeout_t *apTimeout,stTimeoutItem_t *apItem ,unsigned long lo
 		apTimeout->ullStart = allNow;
 		apTimeout->llStartIdx = 0;
 	}
-	if( allNow < apTimeout->ullStart )
+	if( allNow < apTimeout->ullStart )  // 现在定时器还没开始
 	{
 		co_log_err("CO_ERR: AddTimeout line %d allNow %llu apTimeout->ullStart %llu",
 					__LINE__,allNow,apTimeout->ullStart);
 
 		return __LINE__;
 	}
-	if( apItem->ullExpireTime < allNow )
+	if( apItem->ullExpireTime < allNow )  // 现在已经超时
 	{
 		co_log_err("CO_ERR: AddTimeout line %d apItem->ullExpireTime %llu allNow %llu apTimeout->ullStart %llu",
 					__LINE__,apItem->ullExpireTime,allNow,apTimeout->ullStart);
 
 		return __LINE__;
 	}
-	unsigned long long diff = apItem->ullExpireTime - apTimeout->ullStart;
+	unsigned long long diff = apItem->ullExpireTime - apTimeout->ullStart;  // 计时时间，默认最多计时 60s，AllocTimeout参数传入的 60*1000
 
-	if( diff >= (unsigned long long)apTimeout->iItemSize )
+	if( diff >= (unsigned long long)apTimeout->iItemSize )  // 如果超出计时槽位数，选择最后一个槽位
 	{
 		diff = apTimeout->iItemSize - 1;
 		co_log_err("CO_ERR: AddTimeout line %d diff %d",
@@ -406,7 +406,7 @@ int AddTimeout( stTimeout_t *apTimeout,stTimeoutItem_t *apItem ,unsigned long lo
 
 		//return __LINE__;
 	}
-	AddTail( apTimeout->pItems + ( apTimeout->llStartIdx + diff ) % apTimeout->iItemSize , apItem );
+	AddTail( apTimeout->pItems + ( apTimeout->llStartIdx + diff ) % apTimeout->iItemSize , apItem );  // 添加到对应槽位上
 
 	return 0;
 }
@@ -418,14 +418,14 @@ inline void TakeAllTimeout( stTimeout_t *apTimeout,unsigned long long allNow,stT
 		apTimeout->llStartIdx = 0;
 	}
 
-	if( allNow < apTimeout->ullStart )
+	if( allNow < apTimeout->ullStart )  // 开始时间在当前时间之后
 	{
 		return ;
 	}
-	int cnt = allNow - apTimeout->ullStart + 1;
+	int cnt = allNow - apTimeout->ullStart + 1;  // 计算超时的槽位数量
 	if( cnt > apTimeout->iItemSize )
 	{
-		cnt = apTimeout->iItemSize;
+		cnt = apTimeout->iItemSize;  // 如果所有的定时器都超时了，那么就需要对整个列表处理
 	}
 	if( cnt < 0 )
 	{
@@ -436,8 +436,8 @@ inline void TakeAllTimeout( stTimeout_t *apTimeout,unsigned long long allNow,stT
 		int idx = ( apTimeout->llStartIdx + i) % apTimeout->iItemSize;
 		Join<stTimeoutItem_t,stTimeoutItemLink_t>( apResult,apTimeout->pItems + idx  );
 	}
-	apTimeout->ullStart = allNow;
-	apTimeout->llStartIdx += cnt - 1;
+	apTimeout->ullStart = allNow;  // 更新超时时间
+	apTimeout->llStartIdx += cnt - 1;  // 这里配合循环累加的llStartIdx参数，就可以不需要重置超时时间
 
 
 }
@@ -469,7 +469,7 @@ struct stCoRoutine_t *co_create_env( stCoRoutineEnv_t * env, const stCoRoutineAt
 	}
 	if( at.stack_size <= 0 )
 	{
-		at.stack_size = 128 * 1024;
+		at.stack_size = 128 * 1024;  // TLS的默认是 8K，因为 co_init_curr_thread_env传进来的是一个NULL
 	}
 	else if( at.stack_size > 1024 * 1024 * 8 )
 	{
