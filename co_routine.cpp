@@ -149,7 +149,7 @@ static pid_t GetPid()
 }
 */
 template <class T,class TLink>
-void RemoveFromLink(T *ap)
+void RemoveFromLink(T *ap)  // 从双向链表中移除 ap元素
 {
 	TLink *lst = ap->pLink;
 	if(!lst) return ;
@@ -189,7 +189,7 @@ void RemoveFromLink(T *ap)
 }
 
 template <class TNode,class TLink>
-void inline AddTail(TLink*apLink,TNode *ap)
+void inline AddTail(TLink*apLink,TNode *ap) // 将元素ap添加到apLikn链表末尾
 {
 	if( ap->pLink )
 	{
@@ -210,7 +210,7 @@ void inline AddTail(TLink*apLink,TNode *ap)
 	ap->pLink = apLink;
 }
 template <class TNode,class TLink>
-void inline PopHead( TLink*apLink )
+void inline PopHead( TLink*apLink )  // pop apLink头元素
 {
 	if( !apLink->head ) 
 	{
@@ -293,7 +293,7 @@ stShareStack_t* co_alloc_sharestack(int count, int stack_size)
 	return share_stack;
 }
 
-static stStackMem_t* co_get_stackmem(stShareStack_t* share_stack)
+static stStackMem_t* co_get_stackmem(stShareStack_t* share_stack)  // 共享栈为什么是取余计算索引的
 {
 	if (!share_stack)
 	{
@@ -438,8 +438,6 @@ inline void TakeAllTimeout( stTimeout_t *apTimeout,unsigned long long allNow,stT
 	}
 	apTimeout->ullStart = allNow;  // 更新超时时间
 	apTimeout->llStartIdx += cnt - 1;  // 这里配合循环累加的llStartIdx参数，就可以不需要重置超时时间
-
-
 }
 static int CoRoutineFunc( stCoRoutine_t *co,void * )
 {
@@ -537,7 +535,7 @@ void co_free( stCoRoutine_t *co )
     }   
     //walkerdu fix at 2018-01-20
     //存在内存泄漏
-    else 
+    else // 使用了共享协程栈
     {
         if(co->save_buffer)
             free(co->save_buffer);
@@ -840,7 +838,8 @@ void co_eventloop( stCoEpoll_t *ctx,pfn_co_eventloop_t pfn,void *arg )
 		{
 
 			PopHead<stTimeoutItem_t,stTimeoutItemLink_t>( active );
-            if (lp->bTimeout && now < lp->ullExpireTime) 
+			// 这也是解决定时器超过60s，无法定时的问题
+            if (lp->bTimeout && now < lp->ullExpireTime)   // 再次判断是否超时，如果没有超时，将其重新加到超时队列
 			{
 				int ret = AddTimeout(ctx->pTimeout, lp, now);
 				if (!ret) 
